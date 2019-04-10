@@ -911,7 +911,7 @@ class Form
 		if (is_array($js) && count($js) > 0) {
 			$this->SetFormTextJS($name, $js);
 		} // mPDF 5.3.25
-		if ($this->mpdf->keep_block_together) {
+		if ($this->mpdf->keep_block_together()) {
 			$this->mpdf->ktForms[] = $f;
 		} else if ($this->mpdf->writingHTMLheader || $this->mpdf->writingHTMLfooter) {
 			$this->mpdf->HTMLheaderPageForms[] = $f;
@@ -991,7 +991,7 @@ class Form
 		if ($js) {
 			$this->SetFormChoiceJS($name, $js);
 		}
-		if ($this->mpdf->keep_block_together) {
+		if ($this->mpdf->keep_block_together()) {
 			$this->mpdf->ktForms[] = $f;
 		} else if ($this->mpdf->writingHTMLheader || $this->mpdf->writingHTMLfooter) {
 			$this->mpdf->HTMLheaderPageForms[] = $f;
@@ -1193,7 +1193,7 @@ class Form
 				'fontcolor' => $this->mpdf->TextColor,
 			]
 		];
-		if ($this->mpdf->keep_block_together) {
+		if ($this->mpdf->keep_block_together()) {
 			$this->mpdf->ktForms[] = $f;
 		} else if ($this->mpdf->writingHTMLheader || $this->mpdf->writingHTMLfooter) {
 			$this->mpdf->HTMLheaderPageForms[] = $f;

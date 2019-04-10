@@ -240,7 +240,7 @@ final class BaseWriter
 				'y' => $this->mpdf->y, // y when printed
 			];
 
-		} elseif ($this->mpdf->keep_block_together && !$this->mpdf->processingHeader && !$this->mpdf->processingFooter) {
+		} elseif ($this->mpdf->keep_block_together() && !$this->mpdf->processingHeader && !$this->mpdf->processingFooter) {
 			// do nothing
 		} else {
 			$this->mpdf->pages[$this->mpdf->page] .= $s . ($ln ? "\n" : '');

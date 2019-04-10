@@ -1604,7 +1604,7 @@ class CssManager
 					$p['TEXT-ALIGN'] = 'center';
 				}
 			}
-			if ($this->mpdf->ColActive || $this->mpdf->keep_block_together) {
+			if ($this->mpdf->ColActive || $this->mpdf->keep_block_together()) {
 				if (isset($this->mpdf->blk[$this->mpdf->blklvl - 1]['bgcolor']) && $this->mpdf->blk[$this->mpdf->blklvl - 1]['bgcolor']) { // Doesn't officially inherit, but default value is transparent (?=inherited)
 					$cor = $this->mpdf->blk[$this->mpdf->blklvl - 1]['bgcolorarray'];
 					$p['BACKGROUND-COLOR'] = $this->colorConverter->colAtoString($cor);

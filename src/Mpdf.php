@@ -273,8 +273,6 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 
 	var $tableBackgrounds;
 	var $inlineDisplayOff;
-	var $kt_y00;
-	var $kt_p00;
 	var $upperCase;
 	var $checkSIP;
 	var $checkSMP;
@@ -1073,8 +1071,6 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 
 		$this->tableBackgrounds = [];
 		$this->uniqstr = '20110230'; // mPDF 5.7.2
-		$this->kt_y00 = '';
-		$this->kt_p00 = '';
 		$this->BMPonly = [];
 		$this->page = 0;
 		$this->n = 2;
@@ -4252,7 +4248,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 	function Link($x, $y, $w, $h, $link)
 	{
 		$l = [$x * Mpdf::SCALE, $this->hPt - $y * Mpdf::SCALE, $w * Mpdf::SCALE, $h * Mpdf::SCALE, $link];
-		if ($this->keep_block_together) { // don't write yet
+		if ($this->keep_block_together()) { // don't write yet
 			return;
 		} elseif ($this->table_rotate) { // *TABLES*
 			$this->tbrot_Links[$this->page][] = $l; // *TABLES*
@@ -9243,7 +9239,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 					$x = $this->x;
 					$this->Cell(($this->blk[$blvl]['width']), $h, '', '', 0, '', 1);
 					$this->x = $x;
-					if (!$this->keep_block_together && !$this->writingHTMLheader && !$this->writingHTMLfooter) {
+					if (!$this->keep_block_together() && !$this->writingHTMLheader && !$this->writingHTMLfooter) {
 						// $state = 0 normal; 1 top; 2 bottom; 3 top and bottom
 						if ($blvl == $this->blklvl) {
 							$this->PaintDivLnBorder($state, $blvl, $h);
@@ -9727,7 +9723,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 
 		$an = ['txt' => $text, 'x' => $x, 'y' => $y, 'opt' => ['Icon' => $icon, 'T' => $author, 'Subj' => $subject, 'C' => $colarray, 'CA' => $opacity, 'popup' => $popup, 'file' => $file]];
 
-		if ($this->keep_block_together) { // don't write yet
+		if ($this->keep_block_together()) { // don't write yet
 			return;
 		} elseif ($this->table_rotate) {
 			$this->tbrot_Annots[$this->page][] = $an;
@@ -15878,7 +15874,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 					$this->internallink[$vetor[7]] = ["Y" => $ily, "PAGE" => $this->page, "kwt" => true];
 				} elseif ($this->ColActive) {
 					$this->internallink[$vetor[7]] = ["Y" => $ily, "PAGE" => $this->page, "col" => $this->CurrCol];
-				} elseif (!$this->keep_block_together) {
+				} elseif (!$this->keep_block_together()) {
 					$this->internallink[$vetor[7]] = ["Y" => $ily, "PAGE" => $this->page];
 				}
 				if (empty($vetor[0])) { // Ignore empty text
@@ -16403,7 +16399,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 		if ($this->ColActive) {
 			return;
 		} // *COLUMNS*
-		if ($this->keep_block_together) {
+		if ($this->keep_block_together()) {
 			return;
 		} // mPDF 6
 		$save_y = $this->y;
@@ -16894,7 +16890,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 
 
 		// BACKGROUNDS are disabled in columns/kbt/headers - messes up the repositioning in printcolumnbuffer
-		if ($this->ColActive || $this->kwt || $this->keep_block_together) {
+		if ($this->ColActive || $this->kwt || $this->keep_block_together()) {
 			return;
 		}
 
@@ -21936,7 +21932,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 
 								// $this->AcceptPageBreak() has moved tablebuffer to $this->pages content
 								if ($this->tableBackgrounds) {
-									if (!$this->keep_block_together) {
+									if (!$this->keep_block_together()) {
 										$s = $this->PrintTableBackgrounds();
 										if ($this->bufferoutput) {
 											$this->headerbuffer = preg_replace('/(___TABLE___BACKGROUNDS' . $this->uniqstr . ')/', '\\1' . "\n" . $s . "\n", $this->headerbuffer);
@@ -22857,7 +22853,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 		}
 
 		if ($this->tableBackgrounds && $level == 1) {
-			if (!$this->keep_block_together) {
+			if (!$this->keep_block_together()) {
 				$s = $this->PrintTableBackgrounds();
 				if ($this->table_rotate && !$this->processingHeader && !$this->processingFooter) {
 					$this->tablebuffer = preg_replace('/(___TABLE___BACKGROUNDS' . $this->uniqstr . ')/', '\\1' . "\n" . $s . "\n", $this->tablebuffer);
@@ -22949,7 +22945,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 		// DIRECTIONALITY RTL
 		$bmo = ['t' => $txt, 'l' => $level, 'y' => $y, 'p' => $this->page];
 
-		if ($this->keep_block_together) {
+		if ($this->keep_block_together()) {
 			// do nothing
 		} elseif ($this->table_rotate) {
 			$this->tbrot_BMoutlines[] = $bmo;
@@ -23084,7 +23080,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 			$this->internallink[$uid] = ["Y" => $ily, "PAGE" => $this->page, "kwt" => true];
 		} elseif ($this->ColActive) {
 			$this->internallink[$uid] = ["Y" => $ily, "PAGE" => $this->page, "col" => $this->CurrCol];
-		} elseif (!$this->keep_block_together) {
+		} elseif (!$this->keep_block_together()) {
 			$this->internallink[$uid] = ["Y" => $ily, "PAGE" => $this->page];
 		}
 		$this->internallink['#' . $uid] = $linkn;
@@ -23098,7 +23094,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 			$toc_id = strtolower($toc_id);
 		}
 		$btoc = ['t' => $txt, 'l' => $level, 'p' => $this->page, 'link' => $linkn, 'toc_id' => $toc_id];
-		if ($this->keep_block_together) {
+		if ($this->keep_block_together()) {
 			// do nothing
 		} /* -- TABLES -- */ elseif ($this->table_rotate) {
 			$this->tbrot_toc[] = $btoc;
@@ -23552,7 +23548,7 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 
 		// Search the reference (AND Ref/PageNo) in the array
 		$Present = false;
-		if ($this->keep_block_together) {
+		if ($this->keep_block_together()) {
 			// do nothing
 		} /* -- TABLES -- */ elseif ($this->kwt) {
 			$size = count($this->kwt_Reference);
@@ -27271,6 +27267,18 @@ class Mpdf implements \Psr\Log\LoggerAwareInterface
 	public function _out($s)
 	{
 		$this->writer->write($s);
+	}
+
+	public function keep_block_together()
+	{
+		return $this->keep_block_together;
+		for ($i = 1; $i <= $this->blklvl; $i++) {
+			if ($this->blk[$i]['keep_block_together']) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }

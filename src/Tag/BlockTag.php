@@ -338,12 +338,13 @@ abstract class BlockTag extends Tag
 		$properties = $this->cssManager->MergeCSS('BLOCK', $tag, $attr); // mPDF 6 - moved to after page-break-before
 		// mPDF 6 page-break-inside:avoid
 		if (isset($properties['PAGE-BREAK-INSIDE']) && strtoupper($properties['PAGE-BREAK-INSIDE']) === 'AVOID'
-			&& !$this->mpdf->ColActive && !$this->mpdf->keep_block_together && !isset($attr['PAGEBREAKAVOIDCHECKED'])) {
+			&& !$this->mpdf->ColActive && !$this->mpdf->keep_block_together() && !isset($attr['PAGEBREAKAVOIDCHECKED'])) {
 			// avoid re-iterating using PAGEBREAKAVOIDCHECKED; set in CloseTag
 			$currblk['keep_block_together'] = 1;
 			$currblk['array_i'] = $ihtml; // mPDF 6
-			$this->mpdf->kt_y00 = $this->mpdf->y;
-			$this->mpdf->kt_p00 = $this->mpdf->page;
+			$currblk['kt_y00'] = $this->mpdf->y;
+			$currblk['kt_p00'] = $this->mpdf->page;
+			//$currblk['saved_state'] = $currblk;
 			$this->mpdf->keep_block_together = 1;
 		}
 		if ($lastbottommargin && !empty($properties['MARGIN-TOP']) && empty($properties['FLOAT'])) {
@@ -443,9 +444,9 @@ abstract class BlockTag extends Tag
 		if (isset($properties['FLOAT']) && strtoupper($properties['FLOAT']) === 'RIGHT' && !$this->mpdf->ColActive) {
 
 			// Cancel Keep-Block-together
-			$currblk['keep_block_together'] = false;
-			$this->mpdf->kt_y00 = '';
-			$this->mpdf->keep_block_together = 0;
+			//$currblk['keep_block_together'] = false;
+			//$currblk['kt_y00'] = null;
+			//$this->mpdf->keep_block_together = 0;
 
 			$this->mpdf->blockContext++;
 			$currblk['blockContext'] = $this->mpdf->blockContext;
@@ -494,9 +495,9 @@ abstract class BlockTag extends Tag
 
 		} elseif (isset($properties['FLOAT']) && strtoupper($properties['FLOAT']) === 'LEFT' && !$this->mpdf->ColActive) {
 			// Cancel Keep-Block-together
-			$currblk['keep_block_together'] = false;
-			$this->mpdf->kt_y00 = '';
-			$this->mpdf->keep_block_together = 0;
+			//$currblk['keep_block_together'] = false;
+			//$currblk['kt_y00'] = null;
+			//$this->mpdf->keep_block_together = 0;
 
 			$this->mpdf->blockContext++;
 			$currblk['blockContext'] = $this->mpdf->blockContext;
@@ -766,7 +767,7 @@ abstract class BlockTag extends Tag
 		$this->mpdf->x = $this->mpdf->lMargin + $currblk['outer_left_margin'];
 
 		/* -- BACKGROUNDS -- */
-		if (!empty($properties['BACKGROUND-IMAGE']) && !$this->mpdf->kwt && !$this->mpdf->ColActive && !$this->mpdf->keep_block_together) {
+		if (!empty($properties['BACKGROUND-IMAGE']) && !$this->mpdf->kwt && !$this->mpdf->ColActive && !$this->mpdf->keep_block_together()) {
 			$ret = $this->mpdf->SetBackground($properties, $currblk['inner_width']);
 			if ($ret) {
 				$currblk['background-image'] = $ret;
@@ -775,7 +776,7 @@ abstract class BlockTag extends Tag
 		/* -- END BACKGROUNDS -- */
 
 		/* -- TABLES -- */
-		if ($this->mpdf->use_kwt && isset($attr['KEEP-WITH-TABLE']) && !$this->mpdf->ColActive && !$this->mpdf->keep_block_together) {
+		if ($this->mpdf->use_kwt && isset($attr['KEEP-WITH-TABLE']) && !$this->mpdf->ColActive && !$this->mpdf->keep_block_together()) {
 			$this->mpdf->kwt = true;
 			$this->mpdf->kwt_y0 = $this->mpdf->y;
 			//$this->mpdf->kwt_x0 = $this->mpdf->x;
@@ -948,6 +949,7 @@ abstract class BlockTag extends Tag
 
 	public function close(&$ahtml, &$ihtml)
 	{
+		$currblk = & $this->mpdf->blk[$this->mpdf->blklvl];
 		$tag = $this->getTagName();
 
 		// mPDF 6 bidi
@@ -1232,11 +1234,11 @@ abstract class BlockTag extends Tag
 		if ($this->mpdf->blk[$this->mpdf->blklvl]['keep_block_together']) {
 			$movepage = false;
 			// If page-break-inside:avoid section has broken to new page but fits on one side - then move:
-			if (($this->mpdf->page - $this->mpdf->kt_p00) == 1 && $this->mpdf->y < $this->mpdf->kt_y00) {
+			if (($this->mpdf->page - $currblk['kt_p00']) == 1 && $this->mpdf->y < $currblk['kt_y00']) {
 				$movepage = true;
 			}
-			if (($this->mpdf->page - $this->mpdf->kt_p00) > 0) {
-				for ($i = $this->mpdf->page; $i > $this->mpdf->kt_p00; $i--) {
+			if (($this->mpdf->page - $currblk['kt_p00']) > 0) {
+				for ($i = $this->mpdf->page; $i > $currblk['kt_p00']; $i--) {
 					unset($this->mpdf->pages[$i]);
 					if (isset($this->mpdf->blk[$this->mpdf->blklvl]['bb_painted'][$i])) {
 						unset($this->mpdf->blk[$this->mpdf->blklvl]['bb_painted'][$i]);
@@ -1248,12 +1250,13 @@ abstract class BlockTag extends Tag
 						unset($this->mpdf->pageoutput[$i]);
 					}
 				}
-				$this->mpdf->page = $this->mpdf->kt_p00;
+				$this->mpdf->page = $currblk['kt_p00'];
 			}
+			//$currblk = $currblk['saved_state'];
 			$this->mpdf->keep_block_together = 0;
 			$this->mpdf->pageoutput[$this->mpdf->page] = [];
 
-			$this->mpdf->y = $this->mpdf->kt_y00;
+			$this->mpdf->y = $currblk['kt_y00'];
 			$ihtml = $this->mpdf->blk[$this->mpdf->blklvl]['array_i'] - 1;
 
 			$ahtml[$ihtml + 1] .= ' pagebreakavoidchecked="true";'; // avoid re-iterating; read in OpenTag()
