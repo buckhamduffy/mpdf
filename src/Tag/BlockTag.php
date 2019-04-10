@@ -342,6 +342,7 @@ abstract class BlockTag extends Tag
 			// avoid re-iterating using PAGEBREAKAVOIDCHECKED; set in CloseTag
 			$currblk['keep_block_together'] = 1;
 			$currblk['array_i'] = $ihtml; // mPDF 6
+			$currblk['kt_floatDivs'] = $this->mpdf->floatDivs;
 			$this->mpdf->kt_y00 = $this->mpdf->y;
 			$this->mpdf->kt_p00 = $this->mpdf->page;
 			$this->mpdf->keep_block_together = 1;
@@ -442,11 +443,6 @@ abstract class BlockTag extends Tag
 		/* -- CSS-FLOAT -- */
 		if (isset($properties['FLOAT']) && strtoupper($properties['FLOAT']) === 'RIGHT' && !$this->mpdf->ColActive) {
 
-			// Cancel Keep-Block-together
-			$currblk['keep_block_together'] = false;
-			$this->mpdf->kt_y00 = '';
-			$this->mpdf->keep_block_together = 0;
-
 			$this->mpdf->blockContext++;
 			$currblk['blockContext'] = $this->mpdf->blockContext;
 
@@ -493,10 +489,6 @@ abstract class BlockTag extends Tag
 			}
 
 		} elseif (isset($properties['FLOAT']) && strtoupper($properties['FLOAT']) === 'LEFT' && !$this->mpdf->ColActive) {
-			// Cancel Keep-Block-together
-			$currblk['keep_block_together'] = false;
-			$this->mpdf->kt_y00 = '';
-			$this->mpdf->keep_block_together = 0;
 
 			$this->mpdf->blockContext++;
 			$currblk['blockContext'] = $this->mpdf->blockContext;
@@ -1250,6 +1242,7 @@ abstract class BlockTag extends Tag
 				}
 				$this->mpdf->page = $this->mpdf->kt_p00;
 			}
+			$this->mpdf->floatDivs = $this->mpdf->blk[$this->mpdf->blklvl]['kt_floatDivs'];
 			$this->mpdf->keep_block_together = 0;
 			$this->mpdf->pageoutput[$this->mpdf->page] = [];
 
